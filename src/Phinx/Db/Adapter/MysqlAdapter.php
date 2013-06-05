@@ -31,6 +31,7 @@ namespace Phinx\Db\Adapter;
 use Phinx\Db\Table,
     Phinx\Db\Table\Column,
     Phinx\Db\Table\Index,
+    Symfony\Component\Console\Output\OutputInterface,
     Phinx\Db\Table\ForeignKey;
 
 /**
@@ -331,6 +332,9 @@ class MysqlAdapter extends PdoAdapter implements AdapterInterface
      */
     public function addColumn(Table $table, Column $column)
     {
+        if (OutputInterface::VERBOSITY_VERBOSE === $this->getOutput()->getVerbosity()) {
+            $this->getOutput()->writeln("adding column");
+        }
         $this->startCommandTimer();
         $sql = sprintf('ALTER TABLE %s ADD %s %s',
             $this->quoteTableName($table->getName()),
@@ -619,6 +623,9 @@ class MysqlAdapter extends PdoAdapter implements AdapterInterface
      */
     public function getSqlType($type)
     {
+        if (OutputInterface::VERBOSITY_VERBOSE === $this->getOutput()->getVerbosity()) {
+            $this->getOutput()->writeln("getSqlType from $type");
+        }
         switch ($type) {
             case 'primary_key':
                 return self::DEFAULT_PRIMARY_KEY;
@@ -671,11 +678,17 @@ class MysqlAdapter extends PdoAdapter implements AdapterInterface
      */
     public function getPhinxType($sqlTypeDef)
     {
+        if (OutputInterface::VERBOSITY_VERBOSE === $this->getOutput()->getVerbosity()) {
+            $this->getOutput()->writeln("getPhinxType from $sqlTypeDef");
+        }
         if (preg_match('/^([\w]+)(\(([\d]+)*(,([\d]+))*\))*$/', $sqlTypeDef, $matches) === false) {
             throw new \RuntimeException('Column type ' . $sqlTypeDef . ' is not supported');
         } else {
             $limit = null;
             $precision = null;
+            $scale = null;
+
+            echo("Matches: " . print_r($matches, true));
             $type = $matches[1];
             if (count($matches) > 2) {
                 $limit = $matches[3] ? $matches[3] : null;
@@ -718,7 +731,8 @@ class MysqlAdapter extends PdoAdapter implements AdapterInterface
             return array(
                 'name' => $type,
                 'limit' => $limit,
-                'precision' => $precision
+                'precision' => $precision,
+                'scale' => $scale
             );
         }
     }
@@ -786,6 +800,11 @@ class MysqlAdapter extends PdoAdapter implements AdapterInterface
         $def = '';
         $def = '';
         $def .= strtoupper($sqlType['name']);
+        $prec = $column->getPrecision();
+        $scale = $column->getScale();        
+        if ($prec || $scale) {
+            $def .= "($prec , $scale)";
+        }
         $def .= ($column->getLimit() || isset($sqlType['limit']))
                      ? '(' . ($column->getLimit() ? $column->getLimit() : $sqlType['limit']) . ')' : '';
         $def .= ($column->isNull() == false) ? ' NOT NULL' : ' NULL';

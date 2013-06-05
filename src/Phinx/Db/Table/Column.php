@@ -50,6 +50,16 @@ class Column
     protected $limit = null;
     
     /**
+     * @var integer
+     */
+    protected $precision = null;
+
+    /**
+     * @var integer
+     */
+    protected $scale = null;
+
+    /**
      * @var boolean
      */
     protected $null = false;
@@ -272,6 +282,37 @@ class Column
     {
         return $this->update;
     }
+
+    /**
+     * Sets the column precision
+     *
+     * @param  integer $precision Precision value
+     * @return Column
+     */
+    public function setPrecision($precision) {
+            $this->precision = $precision;
+        return $this;
+    }
+
+    public function getPrecision() {
+        return $this->precision;
+    }
+
+    /**
+     * Sets the column scale
+     *
+     * @param  integer $scale Scale value
+     * @return Column
+     */
+    public function setScale($scale) {
+            $this->scale = $scale;
+        return $this;
+    }
+
+    public function getScale() {
+        return $this->scale;
+    }
+
 
     /**
      * Utility method that maps an array of column options to this objects methods.
